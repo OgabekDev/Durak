@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "900945292771",
+    "project_id": "durak-ogabekdev",
+    "storage_bucket": "durak-ogabekdev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:900945292771:android:866dcf44093566dacd44d6",
+        "android_client_info": {
+          "package_name": "dev.ogabek.durak"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "900945292771-c40h5m4c46frqi6c7dvf6f8topsibh79.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjmm3nKjqaOJg65bqjIimcPW2ZKSC1GDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "900945292771-c40h5m4c46frqi6c7dvf6f8topsibh79.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
