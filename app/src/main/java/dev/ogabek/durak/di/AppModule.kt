@@ -10,10 +10,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(Singleton::class)
+@InstallIn(SingletonComponent::class)
 class AppModule {
 
     private val application = Application()
