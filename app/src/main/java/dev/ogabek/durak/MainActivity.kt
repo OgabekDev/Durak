@@ -10,34 +10,35 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.initialize
 import dagger.hilt.android.AndroidEntryPoint
 import dev.ogabek.durak.screens.MainScreen
+import dev.ogabek.durak.screens.PlayScreen
 import dev.ogabek.durak.ui.theme.DurakTheme
+import dev.ogabek.durak.utils.random
+import kotlin.random.Random
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Firebase.initialize(this)
+
         setContent {
             DurakTheme {
-                MainScreen()
+                PlayScreen((100000..999999).random().toString())
             }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     DurakTheme {
-        Greeting("Android")
+        MainActivity()
     }
 }

@@ -10,14 +10,14 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.ogabek.durak.model.Player
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 @SuppressLint("StaticFieldLeak")
 class PlayViewModel @Inject constructor (
-    private val database: DatabaseReference,
-    private val context: Context
+    private val database: DatabaseReference
 ): ViewModel() {
 
     private val _loading = mutableStateOf(false)
@@ -44,61 +44,12 @@ class PlayViewModel @Inject constructor (
     private val _errorMessage = mutableStateOf("")
     val errorMessage = _errorMessage
 
+    private val _opponent = mutableStateOf<Player?>(null)
+    val opponent = _opponent
+
     fun setDatabase(isNewGame: Boolean, gameId: String) = viewModelScope.launch {
 
-        if(isNewGame) {
-            _roomId.value = gameId
 
-            database.child("connections").child(roomId.value).addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!opponentFound.value) {
-                        when(snapshot.childrenCount) {
-                            0L -> {
-                                snapshot.child("firstPlayer").ref.setValue(playerId)
-                                opponentFound.value = false
-                            }
-                            1L -> {
-                                showDialog.value = true
-                            }
-                            2L -> {
-                                showDialog.value = false
-
-                                opponentFound.value = true
-
-                                playerTurn.value = playerId.value
-                            }
-                        }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    _error.value = true
-                    _errorMessage.value = error.message + "  " + error.details
-                }
-
-            })
-
-        } else {
-            database.child("connections").child(roomId.value).addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!opponentFound.value) {
-                        if (snapshot.childrenCount == 1L) {
-                            snapshot.child("secondPlayer").ref.setValue(playerId)
-                            _roomId.value = gameId
-
-                            playerTurn.value = snapshot.child("firstPlayer").value as String
-                            opponentFound.value = true
-                        }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    _error.value = true
-                    _errorMessage.value = error.message + "  " + error.details
-                }
-
-            })
-        }
 
     }
 
