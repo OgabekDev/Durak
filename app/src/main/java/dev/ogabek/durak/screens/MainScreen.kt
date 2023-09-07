@@ -30,15 +30,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.ogabek.durak.R
+import dev.ogabek.durak.screens.destinations.PlayScreenDestination
 import dev.ogabek.durak.ui.theme.DurakTheme
 import dev.ogabek.durak.viewmodel.HomeViewModel
 import dev.ogabek.durak.viewmodel.PlayViewModel
 import dev.ogabek.durak.views.LoadingView
 
+@Destination(start = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    navigator: DestinationsNavigator,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
 
@@ -108,23 +116,22 @@ fun MainScreen(
                 modifier = Modifier.height(50.dp)
             )
 
-            if (viewModel.isGameHave.value == true){
-                Button(
-                    onClick = {
-                        // TODO: Create Game onClick
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 25.dp)
-                        .padding(bottom = 10.dp)
-                        .height(50.dp)
-                ) {
-                    Text(
-                        text = "Create Game",
-                        fontSize = 14.sp,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                }
+            Button(
+                onClick = {
+                    // TODO: Create Game onClick
+                    navigator.navigate(PlayScreenDestination(gameId = "12345"))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 25.dp)
+                    .padding(bottom = 10.dp)
+                    .height(50.dp)
+            ) {
+                Text(
+                    text = "Create Game",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.SansSerif
+                )
             }
         }
 
@@ -136,12 +143,4 @@ fun MainScreen(
         }
     }
 
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    DurakTheme {
-        MainScreen()
-    }
 }

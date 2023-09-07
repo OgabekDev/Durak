@@ -1,7 +1,7 @@
 buildscript {
     ext {
         kotlin_version = '1.9.10'
-        hilt_version = '2.48'
+        hilt_version = '2.46'
     }
     dependencies {
         classpath 'com.google.gms:google-services:4.3.15'

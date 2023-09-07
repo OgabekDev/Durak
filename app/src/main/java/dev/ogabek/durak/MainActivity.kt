@@ -13,8 +13,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.initialize
+import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint
 import dev.ogabek.durak.screens.MainScreen
+import dev.ogabek.durak.screens.NavGraphs
 import dev.ogabek.durak.screens.PlayScreen
 import dev.ogabek.durak.ui.theme.DurakTheme
 import dev.ogabek.durak.utils.random
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DurakTheme {
-                PlayScreen()
+                DestinationsNavHost(navGraph = NavGraphs.root)
             }
         }
     }

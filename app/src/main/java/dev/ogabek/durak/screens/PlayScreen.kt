@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.ogabek.durak.R
 import dev.ogabek.durak.model.Card
 import dev.ogabek.durak.model.CardType
@@ -47,8 +49,12 @@ import dev.ogabek.durak.views.CardPack
 import dev.ogabek.durak.views.MyButton
 import dev.ogabek.durak.views.PlayingCard
 
+@Destination
 @Composable
-fun PlayScreen() {
+fun PlayScreen(
+    navController: DestinationsNavigator,
+    gameId: String
+) {
 
 
     val viewModel: PlayViewModel = hiltViewModel()
@@ -117,7 +123,7 @@ fun GameView() {
 
         Box(
             modifier = Modifier
-                .padding(top = 0.dp)
+                .padding(top = 50.dp)
                 .align(Alignment.Center)
         ) {
             LazyVerticalGrid(
@@ -138,7 +144,7 @@ fun GameView() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
                 .align(Alignment.BottomCenter)
         ) {
             Row(
