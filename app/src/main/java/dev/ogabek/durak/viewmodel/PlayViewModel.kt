@@ -23,34 +23,13 @@ class PlayViewModel @Inject constructor (
     private val _loading = mutableStateOf(false)
     val loading = _loading
 
-    private val _roomId = mutableStateOf("")
-    val roomId = _roomId
-
-    private val _opponentFound = mutableStateOf(false)
-    val opponentFound = _opponentFound
-
-    private val _playerId = mutableStateOf("")
-    val playerId = _playerId
-
-    private val _showDialog = mutableStateOf(false)
-    val showDialog = _showDialog
-
-    private var _playerTurn = mutableStateOf("")
-    val playerTurn = _playerTurn
-
     private val _error = mutableStateOf(false)
     val error = _error
 
     private val _errorMessage = mutableStateOf("")
     val errorMessage = _errorMessage
 
-    private val _opponent = mutableStateOf<Player?>(null)
-    val opponent = _opponent
-
-    fun setDatabase(isNewGame: Boolean, gameId: String) = viewModelScope.launch {
 
 
-
-    }
 
 }

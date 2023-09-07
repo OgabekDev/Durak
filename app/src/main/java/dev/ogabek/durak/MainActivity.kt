@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DurakTheme {
-                PlayScreen((100000..999999).random().toString())
+                PlayScreen()
             }
         }
     }

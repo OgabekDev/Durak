@@ -1,5 +1,6 @@
 package dev.ogabek.durak.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,17 +23,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.ogabek.durak.R
 import dev.ogabek.durak.ui.theme.DurakTheme
+import dev.ogabek.durak.viewmodel.HomeViewModel
+import dev.ogabek.durak.viewmodel.PlayViewModel
+import dev.ogabek.durak.views.LoadingView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    viewModel: HomeViewModel = hiltViewModel()
+) {
 
     var gameId by remember {
         mutableStateOf("")
@@ -84,7 +92,8 @@ fun MainScreen() {
 
             Button(
                 onClick = {
-
+                    // TODO: Join Game onClick
+                          viewModel.isGameHave(gameId)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,22 +108,31 @@ fun MainScreen() {
                 modifier = Modifier.height(50.dp)
             )
 
-            Button(
-                onClick = {
-
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 25.dp)
-                    .padding(bottom = 10.dp)
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = "Create Game",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.SansSerif
-                )
+            if (viewModel.isGameHave.value == true){
+                Button(
+                    onClick = {
+                        // TODO: Create Game onClick
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 25.dp)
+                        .padding(bottom = 10.dp)
+                        .height(50.dp)
+                ) {
+                    Text(
+                        text = "Create Game",
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
             }
+        }
+
+        if (viewModel.isLoading.value) {
+            LoadingView(title = "Loading...", subTitle = "Please wait!")
+        }
+        if (viewModel.isError.value) {
+            Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT).show()
         }
     }
 
