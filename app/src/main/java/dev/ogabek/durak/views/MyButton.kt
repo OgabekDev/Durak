@@ -3,6 +3,7 @@ package dev.ogabek.durak.views
 import android.graphics.Paint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -40,7 +41,8 @@ fun MyButton(
     text: String,
     height: Int,
     width: Int,
-    color: Color
+    color: Color,
+    onClick: () -> Unit
 ) {
 
     Box(
@@ -48,7 +50,10 @@ fun MyButton(
             .height(height = height.dp)
             .width(width = width.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(color = color),
+            .background(color = color)
+            .clickable {
+                onClick()
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -71,6 +76,6 @@ fun MyButtonPreview() {
             height = 35,
             width = 75,
             color = Color(144, 64, 58)
-        )
+        ) {}
     }
 }

@@ -36,6 +36,7 @@ import dev.ogabek.durak.model.CardType
 import dev.ogabek.durak.ui.theme.DurakTheme
 import dev.ogabek.durak.viewmodel.PlayViewModel
 import dev.ogabek.durak.views.CardPack
+import dev.ogabek.durak.views.MyButton
 import dev.ogabek.durak.views.PlayingCard
 
 @Composable
@@ -132,7 +133,35 @@ fun GameView() {
             } // Playing Card
         } // Center Section
 
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .align(Alignment.BottomCenter)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MyButton(text = "I take", height = 35, width = 75, color = Color(144, 64, 58)) {
 
+                }
+                MyButton(text = "I pass", height = 35, width = 75, color = Color(58, 144, 144)) {
+
+                }
+                MyButton(text = "Bat", height = 35, width = 75, color = Color(66, 52, 155)) {
+
+                }
+                MyButton(text = "Play", height = 35, width = 100, color = Color(58, 144, 62)) {
+
+                }
+            }
+
+
+
+        }
 
     }
 }
