@@ -38,6 +38,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.ogabek.durak.R
 import dev.ogabek.durak.screens.destinations.PlayScreenDestination
 import dev.ogabek.durak.ui.theme.DurakTheme
+import dev.ogabek.durak.utils.random
 import dev.ogabek.durak.viewmodel.HomeViewModel
 import dev.ogabek.durak.viewmodel.PlayViewModel
 import dev.ogabek.durak.views.LoadingView
@@ -53,6 +54,8 @@ fun MainScreen(
     var gameId by remember {
         mutableStateOf("")
     }
+
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -101,7 +104,15 @@ fun MainScreen(
             Button(
                 onClick = {
                     // TODO: Join Game onClick
-                          viewModel.isGameHave(gameId)
+                    if (viewModel.isGameHave(gameId)) {
+                        navigator.navigate(PlayScreenDestination(gameId))
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "There is no game with game id: $gameId",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,7 +130,11 @@ fun MainScreen(
             Button(
                 onClick = {
                     // TODO: Create Game onClick
-                    navigator.navigate(PlayScreenDestination(gameId = "12345"))
+                    navigator.navigate(
+                        PlayScreenDestination(
+                            gameId = (1..10000).random().toString()
+                        )
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,7 +154,8 @@ fun MainScreen(
             LoadingView(title = "Loading...", subTitle = "Please wait!")
         }
         if (viewModel.isError.value) {
-            Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT).show()
+            Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT)
+                .show()
         }
     }
 

@@ -17,21 +17,19 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = mutableStateOf(false)
     val isLoading = _isLoading
 
-    private val _isGameHave = mutableStateOf<Boolean?>(null)
-    val isGameHave = _isGameHave
-
     private val _isError = mutableStateOf(false)
     val isError = _isError
 
     private val _errorMessage = mutableStateOf("")
     val errorMessage = _errorMessage
 
-    fun isGameHave(gameId: String) {
+    fun isGameHave(gameId: String): Boolean {
         _isLoading.value = true
-        database.child(gameId).addListenerForSingleValueEvent(object: ValueEventListener {
+        var isGameHave= false
+        database.child(gameId).child(gameId).addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                _isGameHave.value = snapshot.exists()
                 _isLoading.value = false
+                isGameHave = snapshot.exists()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -41,6 +39,7 @@ class HomeViewModel @Inject constructor(
             }
 
         })
+        return isGameHave
     }
 
 }
