@@ -1,12 +1,15 @@
 package dev.ogabek.durak.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,16 +23,19 @@ class HomeViewModel @Inject constructor(
     private val _isError = mutableStateOf(false)
     val isError = _isError
 
+    private val _isGameHave = mutableStateOf<Boolean?>(null)
+    val isGameHave = _isGameHave
+
     private val _errorMessage = mutableStateOf("")
     val errorMessage = _errorMessage
 
-    fun isGameHave(gameId: String): Boolean {
+    fun isGameHave(gameId: String) = viewModelScope.launch {
         _isLoading.value = true
-        var isGameHave= false
-        database.child(gameId).child(gameId).addListenerForSingleValueEvent(object: ValueEventListener {
+
+        database.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 _isLoading.value = false
-                isGameHave = snapshot.exists()
+                _isGameHave.value = snapshot.hasChild(gameId)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -39,7 +45,10 @@ class HomeViewModel @Inject constructor(
             }
 
         })
-        return isGameHave
+    }
+
+    fun avoidRecomposition() {
+        _isGameHave.value = null
     }
 
 }

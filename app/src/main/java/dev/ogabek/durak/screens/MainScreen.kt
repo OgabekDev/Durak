@@ -104,15 +104,7 @@ fun MainScreen(
             Button(
                 onClick = {
                     // TODO: Join Game onClick
-                    if (viewModel.isGameHave(gameId)) {
-                        navigator.navigate(PlayScreenDestination(gameId))
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "There is no game with game id: $gameId",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    viewModel.isGameHave(gameId)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -157,6 +149,15 @@ fun MainScreen(
             Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT)
                 .show()
         }
+
+        if (viewModel.isGameHave.value == true) {
+            viewModel.avoidRecomposition()
+            navigator.navigate(PlayScreenDestination(gameId))
+        } else if (viewModel.isGameHave.value == false) {
+            viewModel.avoidRecomposition()
+            Toast.makeText(context, "There no game with id: $gameId", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
 }
