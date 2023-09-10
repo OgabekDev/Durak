@@ -47,6 +47,7 @@ import dev.ogabek.durak.R
 import dev.ogabek.durak.model.Card
 import dev.ogabek.durak.model.CardType
 import dev.ogabek.durak.ui.theme.DurakTheme
+import dev.ogabek.durak.utils.check
 import dev.ogabek.durak.viewmodel.PlayViewModel
 import dev.ogabek.durak.views.CardPack
 import dev.ogabek.durak.views.LoadingView
@@ -87,6 +88,7 @@ fun PlayScreen(
         if (viewModel.error.value) {
             Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT)
                 .show()
+            viewModel.closeError()
         }
 
         LaunchedEffect(isNew) {
@@ -127,7 +129,10 @@ fun GameView(
                 contentAlignment = Alignment.TopStart
             ) {
                 var padding = 0.0
-                for (i in 0 until viewModel.secondPlayer.size) {
+                for (i in 0 until isNew.check(
+                    viewModel.secondPlayer.size,
+                    viewModel.firstPlayer.size
+                )) {
                     Image(
                         painter = painterResource(id = R.drawable.back),
                         contentDescription = null,
@@ -148,7 +153,7 @@ fun GameView(
             ) {
                 CardPack(
                     mainCard = viewModel.mainCard.value,
-                    count = viewModel.cards.value
+                    count = viewModel.cards.size
                 )
             } // Card Pack
         } // Top Section
@@ -184,18 +189,28 @@ fun GameView(
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (!viewModel.isWaiting.value) {
+                if (viewModel.isTake.value) {
                     MyButton(text = "I take", height = 35, width = 75, color = Color(144, 64, 58)) {
                         // TODO: I take onClick
                     }
-                    MyButton(text = "I pass", height = 35, width = 75, color = Color(58, 144, 144)) {
+                }
+                if (viewModel.isPass.value) {
+                    MyButton(
+                        text = "I pass",
+                        height = 35,
+                        width = 75,
+                        color = Color(58, 144, 144)
+                    ) {
                         // TODO: I pass onClick
                     }
+                }
+                if (viewModel.isBat.value) {
                     MyButton(text = "Bat", height = 35, width = 75, color = Color(66, 52, 155)) {
                         // TODO: Bat onClick
+                        viewModel.batCards(gameId, isNew)
                     }
                 }
-                if (isNew && !viewModel.isWaiting.value) {
+                if (isNew && !viewModel.isWaiting.value && !viewModel.isPlaying.value) {
                     MyButton(text = "Play", height = 35, width = 100, color = Color(58, 144, 62)) {
                         // TODO: Play onClick
                         viewModel.startGame(gameId)
@@ -213,11 +228,21 @@ fun GameView(
                         .height(110.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    for (i in 0 until viewModel.firstPlayer.size) {
-                        val size = if (i == viewModel.firstPlayer.size - 1) 70.dp else 42.dp
+                    for (i in 0 until isNew.check(
+                        viewModel.firstPlayer.size,
+                        viewModel.secondPlayer.size
+                    )) {
+                        val size = if (i == isNew.check(
+                                viewModel.firstPlayer.size,
+                                viewModel.secondPlayer.size
+                            ) - 1
+                        ) 70.dp else 42.dp
                         item {
                             AsyncImage(
-                                viewModel.firstPlayer[i].image(),
+                                isNew.check(
+                                    viewModel.firstPlayer,
+                                    viewModel.secondPlayer
+                                )[i].image(),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(size, 105.dp)
@@ -230,6 +255,14 @@ fun GameView(
                                     )
                                     .clickable {
                                         // TODO: Card onClick
+                                        viewModel.cardClick(
+                                            gameId,
+                                            isNew.check(
+                                                viewModel.firstPlayer,
+                                                viewModel.secondPlayer
+                                            )[i],
+                                            isNew
+                                        )
                                     },
                                 contentScale = ContentScale.FillHeight,
                                 alignment = Alignment.CenterStart

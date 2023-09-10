@@ -39,3 +39,10 @@ fun CoroutineScope.allCardPack(): ArrayList<Card> {
 
     return cards.shuffled() as ArrayList<Card>
 }
+
+fun <T> Boolean.check(a: T, b: T): T = if (this) a else b
+
+fun main(args: Array<String>) {
+    val a  = ArrayList<Card>()
+    print(a.last())
+}

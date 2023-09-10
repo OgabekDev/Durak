@@ -64,7 +64,7 @@ fun PlayingCard(onBoardCard: OnBoardCard) {
                 contentAlignment = Alignment.CenterEnd
             ) {
                 AsyncImage(
-                    model = onBoardCard.secondCard.image(),
+                    model = onBoardCard.secondCard?.image(),
                     contentDescription = null,
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
