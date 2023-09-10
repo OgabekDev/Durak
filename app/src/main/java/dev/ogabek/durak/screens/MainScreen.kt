@@ -124,7 +124,8 @@ fun MainScreen(
                     // TODO: Create Game onClick
                     navigator.navigate(
                         PlayScreenDestination(
-                            gameId = (1..10000).random().toString()
+                            gameId = (1..10000).random().toString(),
+                            isNew = true
                         )
                     )
                 },
@@ -152,7 +153,7 @@ fun MainScreen(
 
         if (viewModel.isGameHave.value == true) {
             viewModel.avoidRecomposition()
-            navigator.navigate(PlayScreenDestination(gameId))
+            navigator.navigate(PlayScreenDestination(gameId, false))
         } else if (viewModel.isGameHave.value == false) {
             viewModel.avoidRecomposition()
             Toast.makeText(context, "There no game with id: $gameId", Toast.LENGTH_SHORT).show()

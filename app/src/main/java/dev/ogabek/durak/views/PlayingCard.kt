@@ -15,11 +15,12 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import dev.ogabek.durak.model.Card
 import dev.ogabek.durak.model.CardType
+import dev.ogabek.durak.model.OnBoardCard
 import dev.ogabek.durak.ui.theme.DurakTheme
 
 @Composable
-fun PlayingCard(firstCard: Card, secondCard: Card? = null) {
-    if (secondCard == null) {
+fun PlayingCard(onBoardCard: OnBoardCard) {
+    if (onBoardCard.secondCard == null) {
         Box(
             modifier = Modifier
                 .rotate(-10F)
@@ -27,7 +28,7 @@ fun PlayingCard(firstCard: Card, secondCard: Card? = null) {
             contentAlignment = Alignment.CenterStart
         ) {
             AsyncImage(
-                model = firstCard.image(),
+                model = onBoardCard.firstCard?.image(),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
@@ -46,7 +47,7 @@ fun PlayingCard(firstCard: Card, secondCard: Card? = null) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 AsyncImage(
-                    model = firstCard.image(),
+                    model = onBoardCard.firstCard?.image(),
                     contentDescription = null,
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
@@ -63,7 +64,7 @@ fun PlayingCard(firstCard: Card, secondCard: Card? = null) {
                 contentAlignment = Alignment.CenterEnd
             ) {
                 AsyncImage(
-                    model = secondCard.image(),
+                    model = onBoardCard.secondCard.image(),
                     contentDescription = null,
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
@@ -80,13 +81,15 @@ fun PlayingCard(firstCard: Card, secondCard: Card? = null) {
 fun PlayingCardPreview() {
     DurakTheme {
         PlayingCard(
-            firstCard = Card(
-                code = 11,
-                type = CardType.HEARTS
-            ),
-            secondCard = Card(
-                code = 1,
-                type = CardType.HEARTS
+            OnBoardCard(
+                firstCard = Card(
+                    code = 11,
+                    type = CardType.HEARTS
+                ),
+                secondCard = Card(
+                    code = 1,
+                    type = CardType.HEARTS
+                )
             )
         )
     }

@@ -29,7 +29,10 @@ import dev.ogabek.durak.model.CardType
 import dev.ogabek.durak.ui.theme.DurakTheme
 
 @Composable
-fun CardPack(mainCard: Card, count: Int) {
+fun CardPack(
+    mainCard: Card?,
+    count: Int
+) {
 
     Row(
         modifier = Modifier,
@@ -43,14 +46,14 @@ fun CardPack(mainCard: Card, count: Int) {
             contentAlignment = Alignment.CenterEnd
         ) {
             var padding = 0.0
-            for (i in 0..count) {
+            for (i in 0 until count) {
                 Image(
-                        painter = painterResource(id = R.drawable.back),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(end = padding.dp)
-                    .size(70.dp, 105.dp),
-                contentScale = ContentScale.FillBounds
+                    painter = painterResource(id = R.drawable.back),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(end = padding.dp)
+                        .size(70.dp, 105.dp),
+                    contentScale = ContentScale.FillBounds
                 )
                 padding += 0.2
             }
@@ -58,12 +61,12 @@ fun CardPack(mainCard: Card, count: Int) {
 
         Box(
             modifier = Modifier
-                .height(70.dp)
+                .height(if(count==0) 125.dp else 70.dp)
                 .width(70.dp)
                 .rotate(90F)
         ) {
             AsyncImage(
-                model = mainCard.image(),
+                model = mainCard?.image(),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -71,7 +74,7 @@ fun CardPack(mainCard: Card, count: Int) {
                 alignment = Alignment.TopStart,
                 contentScale = ContentScale.FillWidth,
 
-            )
+                )
         }
 
     }

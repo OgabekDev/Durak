@@ -3,7 +3,7 @@ package dev.ogabek.durak.model
 import java.util.UUID
 
 data class Card(
-    val id: UUID = UUID.randomUUID(),
+    val id: String = UUID.randomUUID().toString().take(5),
     val code: Int,
     val type: CardType
 ) {

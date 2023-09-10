@@ -1,5 +1,6 @@
 package dev.ogabek.durak.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +33,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily.Companion.SansSerif
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +49,7 @@ import dev.ogabek.durak.model.CardType
 import dev.ogabek.durak.ui.theme.DurakTheme
 import dev.ogabek.durak.viewmodel.PlayViewModel
 import dev.ogabek.durak.views.CardPack
+import dev.ogabek.durak.views.LoadingView
 import dev.ogabek.durak.views.MyButton
 import dev.ogabek.durak.views.PlayingCard
 
@@ -53,11 +57,10 @@ import dev.ogabek.durak.views.PlayingCard
 @Composable
 fun PlayScreen(
     navController: DestinationsNavigator,
-    gameId: String
+    gameId: String,
+    isNew: Boolean,
+    viewModel: PlayViewModel = hiltViewModel()
 ) {
-
-
-    val viewModel: PlayViewModel = hiltViewModel()
 
     Box(
         modifier = Modifier
@@ -68,14 +71,39 @@ fun PlayScreen(
             )
     ) {
 
-        GameView()
+        if (viewModel.isWaiting.value) {
+            LoadingView(
+                title = "Please wait your opponent",
+                subTitle = "Invite via code: $gameId"
+            )
+        } else {
+            GameView(
+                gameId = gameId,
+                viewModel = viewModel,
+                isNew = isNew
+            )
+        }
+
+        if (viewModel.error.value) {
+            Toast.makeText(LocalContext.current, viewModel.errorMessage.value, Toast.LENGTH_SHORT)
+                .show()
+        }
+
+        LaunchedEffect(isNew) {
+            viewModel.setDatabase(gameId)
+            viewModel.loadGame(gameId, isNew)
+        }
 
     }
 
 }
 
 @Composable
-fun GameView() {
+fun GameView(
+    gameId: String,
+    viewModel: PlayViewModel,
+    isNew: Boolean
+) {
 
     Box(
         modifier = Modifier
@@ -94,11 +122,12 @@ fun GameView() {
         ) {
             Box(
                 modifier = Modifier
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .height(110.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 var padding = 0.0
-                for (i in 0..20) {
+                for (i in 0 until viewModel.secondPlayer.size) {
                     Image(
                         painter = painterResource(id = R.drawable.back),
                         contentDescription = null,
@@ -117,7 +146,10 @@ fun GameView() {
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                CardPack(mainCard = Card(code = 14, type = CardType.HEARTS), count = 23)
+                CardPack(
+                    mainCard = viewModel.mainCard.value,
+                    count = viewModel.cards.value
+                )
             } // Card Pack
         } // Top Section
 
@@ -132,10 +164,9 @@ fun GameView() {
                     .padding(16.dp),
                 columns = GridCells.Fixed(3)
             ) {
-                items(6) {
+                items(viewModel.onBoardCard.size) {
                     PlayingCard(
-                        Card(code = 9, type = CardType.CLUBS),
-                        Card(code = 13, type = CardType.CLUBS)
+                        viewModel.onBoardCard[it]
                     )
                 }
             } // Playing Card
@@ -153,17 +184,22 @@ fun GameView() {
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                MyButton(text = "I take", height = 35, width = 75, color = Color(144, 64, 58)) {
-                    // TODO: I take onClick
+                if (!viewModel.isWaiting.value) {
+                    MyButton(text = "I take", height = 35, width = 75, color = Color(144, 64, 58)) {
+                        // TODO: I take onClick
+                    }
+                    MyButton(text = "I pass", height = 35, width = 75, color = Color(58, 144, 144)) {
+                        // TODO: I pass onClick
+                    }
+                    MyButton(text = "Bat", height = 35, width = 75, color = Color(66, 52, 155)) {
+                        // TODO: Bat onClick
+                    }
                 }
-                MyButton(text = "I pass", height = 35, width = 75, color = Color(58, 144, 144)) {
-                    // TODO: I pass onClick
-                }
-                MyButton(text = "Bat", height = 35, width = 75, color = Color(66, 52, 155)) {
-                    // TODO: Bat onClick
-                }
-                MyButton(text = "Play", height = 35, width = 100, color = Color(58, 144, 62)) {
-                    // TODO: Play onClick
+                if (isNew && !viewModel.isWaiting.value) {
+                    MyButton(text = "Play", height = 35, width = 100, color = Color(58, 144, 62)) {
+                        // TODO: Play onClick
+                        viewModel.startGame(gameId)
+                    }
                 }
             }
 
@@ -173,52 +209,31 @@ fun GameView() {
             ) {
                 LazyRow(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .height(110.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    for (i in 0 until 3) {
-                        if (i == 2) {
-                            item {
-                                AsyncImage(
-                                    Card(code = 14, type = CardType.DIAMONDS).image(),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(70.dp, 105.dp)
-                                        .border(
-                                            BorderStroke(
-                                                0.5.dp,
-                                                Color.Black
-                                            ),
-                                            RectangleShape
-                                        )
-                                        .clickable {
-                                            // TODO: Card onClick
-                                        },
-                                    contentScale = ContentScale.FillHeight,
-                                    alignment = Alignment.CenterStart
-                                )
-                            }
-                        } else {
-                            item {
-                                AsyncImage(
-                                    Card(code = 14, type = CardType.DIAMONDS).image(),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(42.dp, 105.dp)
-                                        .border(
-                                            BorderStroke(
-                                                0.5.dp,
-                                                Color.Black
-                                            ),
-                                            RectangleShape
-                                        )
-                                        .clickable {
-                                            // TODO: Card onClick
-                                        },
-                                    contentScale = ContentScale.FillHeight,
-                                    alignment = Alignment.CenterStart
-                                )
-                            }
+                    for (i in 0 until viewModel.firstPlayer.size) {
+                        val size = if (i == viewModel.firstPlayer.size - 1) 70.dp else 42.dp
+                        item {
+                            AsyncImage(
+                                viewModel.firstPlayer[i].image(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(size, 105.dp)
+                                    .border(
+                                        BorderStroke(
+                                            0.5.dp,
+                                            Color.Black
+                                        ),
+                                        RectangleShape
+                                    )
+                                    .clickable {
+                                        // TODO: Card onClick
+                                    },
+                                contentScale = ContentScale.FillHeight,
+                                alignment = Alignment.CenterStart
+                            )
                         }
                     }
                 }
@@ -226,15 +241,5 @@ fun GameView() {
 
         }
 
-    }
-}
-
-@Preview(
-    showBackground = true
-)
-@Composable
-fun PlayScreenPreview() {
-    DurakTheme {
-        GameView()
     }
 }
