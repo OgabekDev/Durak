@@ -1,8 +1,6 @@
 package dev.ogabek.durak.viewmodel
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -15,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.ogabek.durak.model.Card
 import dev.ogabek.durak.model.CardType
 import dev.ogabek.durak.model.OnBoardCard
-import dev.ogabek.durak.model.Player
 import dev.ogabek.durak.utils.allCardPack
 import dev.ogabek.durak.utils.check
 import kotlinx.coroutines.launch
@@ -24,9 +21,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 @SuppressLint("StaticFieldLeak")
-class PlayViewModel @Inject constructor (
+class PlayViewModel @Inject constructor(
     private val database: DatabaseReference
-): ViewModel() {
+) : ViewModel() {
 
     private val _isPlaying = mutableStateOf(false)
     val isPlaying = _isPlaying
@@ -38,7 +35,9 @@ class PlayViewModel @Inject constructor (
     val playerId = _playerId
 
     private val _opponentId = mutableStateOf("")
-    val opponentId = _opponentId
+    private val opponentId = _opponentId
+
+    private var myOpponent: Int = 0
 
     private val _error = mutableStateOf(false)
     val error = _error
@@ -52,14 +51,16 @@ class PlayViewModel @Inject constructor (
     fun loadGame(gameId: String, isNew: Boolean) = viewModelScope.launch {
         _playerId.value = UUID.randomUUID().toString().take(5)
         _isWaiting.value = !isNew
-        database.child(gameId).child("players").addValueEventListener(object: ValueEventListener {
+        database.child(gameId).child("players").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.hasChild("secondPlayer")) {
-                    if (isNew)
+                    if (isNew) {
                         _opponentId.value = snapshot.child("secondPlayer").value as String
-                    else
+                        myOpponent = 2
+                    } else {
                         _opponentId.value = snapshot.child("firstPlayer").value as String
-
+                        myOpponent = 1
+                    }
                     _isWaiting.value = false
                 } else if (!snapshot.hasChild("firstPlayer")) {
                     if (isNew) {
@@ -102,7 +103,7 @@ class PlayViewModel @Inject constructor (
     val mainCard = _mainCard
 
     private val _mainType = mutableStateOf<CardType?>(null)
-    val mainType = _mainType
+    private val mainType = _mainType
 
     // Buttons action
     private val _isTake = mutableStateOf(false)
@@ -114,12 +115,11 @@ class PlayViewModel @Inject constructor (
     private val _isBat = mutableStateOf(false)
     val isBat = _isBat
 
-    private val _firstMove = mutableStateOf("")
-    val firstMove = _firstMove
+    private var whoTake: String = ""
 
-    fun setDatabase(gameId: String) = viewModelScope.launch {
+    fun setDatabase(gameId: String, isNew: Boolean) = viewModelScope.launch {
 
-        database.child(gameId).child("won").addValueEventListener(object: ValueEventListener {
+        database.child(gameId).child("won").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val won = snapshot.value as String
@@ -136,172 +136,178 @@ class PlayViewModel @Inject constructor (
             }
         })
 
-        database.child(gameId).child("game").child("firstPlayer").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _firstPlayer.clear()
-                for (i in snapshot.children) {
-                    val id = i.child("id").value as String
-                    val code = i.child("code").value as Long
-                    val type = enumValueOf(i.child("type").value as String) as CardType
-                    val card = Card(id, code.toInt(), type)
-                    _firstPlayer.add(card)
+        database.child(gameId).child("game").child("firstPlayer")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    _firstPlayer.clear()
+                    for (i in snapshot.children) {
+                        val id = i.child("id").value as String
+                        val code = i.child("code").value as Long
+                        val type = enumValueOf(i.child("type").value as String) as CardType
+                        val card = Card(id, code.toInt(), type)
+                        _firstPlayer.add(card)
+                    }
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
-
-        database.child(gameId).child("game").child("secondPlayer").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _secondPlayer.clear()
-                for (i in snapshot.children) {
-                    val id = i.child("id").value as String
-                    val code = i.child("code").value as Long
-                    val type = enumValueOf(i.child("type").value as String) as CardType
-                    val card = Card(id, code.toInt(), type)
-                    _secondPlayer.add(card)
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
                 }
-            }
+            })
 
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
+        database.child(gameId).child("game").child("secondPlayer")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    _secondPlayer.clear()
+                    for (i in snapshot.children) {
+                        val id = i.child("id").value as String
+                        val code = i.child("code").value as Long
+                        val type = enumValueOf(i.child("type").value as String) as CardType
+                        val card = Card(id, code.toInt(), type)
+                        _secondPlayer.add(card)
+                    }
+                }
 
-        database.child(gameId).child("game").child("onBoard").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _onBoardCard.clear()
-                for (i in snapshot.children) {
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+            })
 
-                    var fCard: Card? = null
-                    var sCard: Card? = null
+        database.child(gameId).child("game").child("onBoard")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    _onBoardCard.clear()
+                    for (i in snapshot.children) {
 
-                    if (i.hasChild("firstCard")) {
-                        val firstId = i.child("firstCard/id").value as String
-                        val firstCode = i.child("firstCard/code").value as Long
-                        val firstType = enumValueOf(i.child("firstCard/type").value as String) as CardType
-                        val firstCard = Card(firstId, firstCode.toInt(), firstType)
-                        fCard = firstCard
-                        if (i.hasChild("secondCard")) {
-                            val secondId = i.child("secondCard/id").value as String
-                            val secondCode = i.child("secondCard/code").value as Long
-                            val secondType = enumValueOf(i.child("secondCard/type").value as String) as CardType
-                            val secondCard = Card(secondId, secondCode.toInt(), secondType)
-                            sCard = secondCard
+                        var fCard: Card? = null
+                        var sCard: Card? = null
+
+                        if (i.hasChild("firstCard")) {
+                            val firstId = i.child("firstCard/id").value as String
+                            val firstCode = i.child("firstCard/code").value as Long
+                            val firstType =
+                                enumValueOf(i.child("firstCard/type").value as String) as CardType
+                            val firstCard = Card(firstId, firstCode.toInt(), firstType)
+                            fCard = firstCard
+                            if (i.hasChild("secondCard")) {
+                                val secondId = i.child("secondCard/id").value as String
+                                val secondCode = i.child("secondCard/code").value as Long
+                                val secondType =
+                                    enumValueOf(i.child("secondCard/type").value as String) as CardType
+                                val secondCard = Card(secondId, secondCode.toInt(), secondType)
+                                sCard = secondCard
+                            }
+                        } else {
+                            _isTake.value = false
+                            _isBat.value = false
                         }
-                    } else {
-                        _isTake.value = false
-                        _isBat.value = false
+
+                        _onBoardCard.add(OnBoardCard(fCard, sCard))
                     }
 
-                    _onBoardCard.add(OnBoardCard(fCard, sCard))
+                    if (onBoardCard.isNotEmpty()) {
+                        val last = onBoardCard.last()
+                        if (last.secondCard == null) {
+                            _isTake.value = playerTurn.value != playerId.value
+                            _isBat.value = false
+                        } else {
+                            _isTake.value = false
+                            _isBat.value = playerTurn.value != playerId.value
+                        }
+                    }
+
                 }
 
-                if (onBoardCard.isNotEmpty()) {
-                    val last = onBoardCard.last()
-                    if (last.secondCard == null) {
-                        _isTake.value = playerTurn.value != playerId.value
-                        _isBat.value = false
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+            })
+
+        database.child(gameId).child("game").child("whoTake")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.value != null) {
+                        _isPass.value = (snapshot.value as String) == opponentId.value
                     } else {
                         _isTake.value = false
-                        _isBat.value = playerTurn.value != playerId.value
+                        _isPass.value = false
+                    }
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+
+            })
+
+        database.child(gameId).child("game").child("cards")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    _cards.clear()
+                    for (i in snapshot.children) {
+                        val id = i.child("id").value as String
+                        val code = i.child("code").value as Long
+                        val type = enumValueOf(i.child("type").value as String) as CardType
+                        val card = Card(id, code.toInt(), type)
+                        _cards.add(card)
+                    }
+                    _mainCard.value = if (cards.isEmpty())
+                        null
+                    else
+                        cards.last()
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+            })
+
+        database.child(gameId).child("game").child("mainType")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.value != null)
+                        _mainType.value = enumValueOf(snapshot.value as String) as CardType
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+            })
+
+        database.child(gameId).child("game").child("playerTurn")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.value != null)
+                        _playerTurn.value = snapshot.value as String
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+
+            })
+
+        database.child(gameId).child("game/whoTake").addValueEventListener(object: ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val value = snapshot.value
+                if (value != null) {
+                    if (value.toString() == playerId.value || value == opponentId.value) {
+                        whoTake = value.toString()
+                    }
+                    if (value.toString() == opponentId.value) {
+                        database.child(gameId).child("game/playerTurn").ref.setValue(playerId.value)
+                    } else if (value.toString() == "done" && whoTake == playerId.value) {
+                        takeCards(gameId, isNew)
+                        _isPass.value = false
                     }
                 }
-
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
-
-        database.child(gameId).child("game").child("whoTake").addValueEventListener(object: ValueEventListener{
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.value != null) {
-                    _isPass.value = (snapshot.value as String) != playerId.value
-                } else {
-                    _isTake.value = false
-                    _isPass.value = false
-                }
-
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-
-        })
-
-        database.child(gameId).child("game").child("cards").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _cards.clear()
-                for (i in snapshot.children) {
-                    val id = i.child("id").value as String
-                    val code = i.child("code").value as Long
-                    val type = enumValueOf(i.child("type").value as String) as CardType
-                    val card = Card(id, code.toInt(), type)
-                    _cards.add(card)
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
-
-        database.child(gameId).child("game").child("mainType").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.value != null)
-                    _mainType.value = enumValueOf(snapshot.value as String) as CardType
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
-
-        database.child(gameId).child("game").child("mainCard").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.value != null) {
-                    val id = snapshot.child("id").value as String
-                    val code = snapshot.child("code").value as Long
-                    val type = enumValueOf(snapshot.child("type").value as String) as CardType
-                    val card = Card(id, code.toInt(), type)
-                    _mainCard.value = card
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
-
-        database.child(gameId).child("game").child("playerTurn").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.value != null)
-                    _playerTurn.value = snapshot.value as String
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-
-        })
-
-        database.child(gameId).child("game").child("firstMove").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.value != null)
-                    _firstMove.value = snapshot.value as String
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -322,33 +328,34 @@ class PlayViewModel @Inject constructor (
 
         val mCard = cards.last()
 
-        database.child(gameId).child("game").addListenerForSingleValueEvent(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                snapshot.ref.removeValue().addOnCompleteListener {
-                    snapshot.child("cards").ref.setValue(cards)
-                    snapshot.child("mainCard").ref.setValue(mCard)
-                    snapshot.child("mainType").ref.setValue(mCard.type)
-                    snapshot.child("firstPlayer").ref.setValue(firstPlayer)
-                    snapshot.child("secondPlayer").ref.setValue(secondPlayer)
-                    snapshot.child("playerTurn").ref.setValue(playerId.value)
-                    snapshot.child("firstMove").ref.setValue(playerId.value)
-                    _isPlaying.value = true
+        database.child(gameId).child("game")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    snapshot.ref.removeValue().addOnCompleteListener {
+                        snapshot.child("cards").ref.setValue(cards)
+                        snapshot.child("mainCard").ref.setValue(mCard)
+                        snapshot.child("mainType").ref.setValue(mCard.type)
+                        snapshot.child("firstPlayer").ref.setValue(firstPlayer)
+                        snapshot.child("secondPlayer").ref.setValue(secondPlayer)
+                        snapshot.child("playerTurn").ref.setValue(playerId.value)
+                        snapshot.child("firstMove").ref.setValue(playerId.value)
+                        _isPlaying.value = true
+                    }
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                _errorMessage.value = error.message
-                _error.value = true
-            }
-        })
+                override fun onCancelled(error: DatabaseError) {
+                    _errorMessage.value = error.message
+                    _error.value = true
+                }
+            })
     }
 
     fun cardClick(gameId: String, card: Card, isNew: Boolean) = viewModelScope.launch {
         val gameDB = database.child(gameId).child("game")
-        
+
         val player = isNew.check(_firstPlayer, _secondPlayer)
         val playerStr = isNew.check("firstPlayer", "secondPlayer")
-        
+
         val onBoard = _onBoardCard
 
         val new = onBoard.isEmpty()
@@ -362,7 +369,17 @@ class PlayViewModel @Inject constructor (
             }
 
         if (playerTurn.value == playerId.value) {
-            if (new) {
+            if (isPass.value && isCardHave) {
+                val boardCard = OnBoardCard(
+                    firstCard = card,
+                    null
+                )
+                onBoard.add(boardCard)
+                player.remove(card)
+
+                gameDB.child(playerStr).ref.setValue(player)
+                gameDB.child("onBoard").ref.setValue(onBoard)
+            } else if (new && !isPass.value) {
                 val boardCard = OnBoardCard(
                     firstCard = card,
                     null
@@ -373,10 +390,13 @@ class PlayViewModel @Inject constructor (
                 gameDB.child(playerStr).ref.setValue(player)
                 gameDB.child("onBoard").ref.setValue(onBoard)
                 gameDB.child("playerTurn").ref.setValue(opponentId.value)
-                gameDB.child("firstMove").ref.setValue(playerId.value)
-            } else {
+            } else if (!isPass.value) {
                 if (onBoard.last().secondCard == null) {
-                    val isPossible = ((onBoard.last().firstCard!!.type == card.type) && (onBoard.last().firstCard!!.code < card.code)) || ((card.type == mainType.value) && (onBoard.last().firstCard!!.code < card.code + isCardMain.check(10, 0)))
+                    val isPossible =
+                        ((onBoard.last().firstCard!!.type == card.type) && (onBoard.last().firstCard!!.code < card.code)) || ((card.type == mainType.value) && (onBoard.last().firstCard!!.code < card.code + isCardMain.check(
+                            10,
+                            0
+                        )))
                     if (isPossible) {
                         onBoard.last().secondCard = card
                         player.remove(card)
@@ -408,21 +428,85 @@ class PlayViewModel @Inject constructor (
         _error.value = false
     }
 
-    fun batCards(gameId: String, isNew: Boolean) = viewModelScope.launch {
+    fun iBat(gameId: String) = viewModelScope.launch {
         val gameDB = database.child(gameId).child("game")
-
-        val player = isNew.check(_firstPlayer, _secondPlayer)
-        val playerStr = isNew.check("firstPlayer", "secondPlayer")
 
         val onBoard = _onBoardCard
         onBoard.clear()
 
-        if (cards.size >=  6 - firstPlayer.size) {
-            val forFirst = cards.take(6 - firstPlayer.size)
-        } else {
+        takeCardsFromPack(gameId)
 
-        }
+        gameDB.child("onBoard").ref.setValue(onBoard)
+        gameDB.child("playerTurn").ref.setValue(opponentId.value)
+        _isBat.value = false
+
     }
 
+    private fun takeCardsFromPack(gameId: String) {
+
+        val gameDB = database.child(gameId).child("game")
+
+        val forFirst = firstPlayer
+        val forSecond = secondPlayer
+        val mCards = cards
+
+        if ((firstPlayer.size < 6) && (mCards.size >= 6 - firstPlayer.size)) {
+            val temp = mCards.take(6 - firstPlayer.size)
+            forFirst.addAll(temp)
+            mCards.removeAll(temp)
+        } else if (firstPlayer.size < 6) {
+            forFirst.addAll(mCards)
+            mCards.clear()
+        }
+
+        if ((secondPlayer.size < 6) && (mCards.size >= 6 - secondPlayer.size)) {
+            val temp = mCards.take(6 - secondPlayer.size)
+            forSecond.addAll(temp)
+            mCards.removeAll(temp)
+        } else if(secondPlayer.size < 6) {
+            forSecond.addAll(mCards)
+            mCards.clear()
+        }
+
+        gameDB.child("firstPlayer").ref.setValue(forFirst)
+        gameDB.child("secondPlayer").ref.setValue(forSecond)
+        gameDB.child("cards").ref.setValue(mCards)
+    }
+
+
+    fun takeCards(gameId: String, isNew: Boolean) = viewModelScope.launch {
+
+        val gameDB = database.child(gameId).child("game")
+
+        val onBoard = _onBoardCard
+
+        val player = isNew.check(_firstPlayer, _secondPlayer)
+        val playerStr = isNew.check("firstPlayer", "secondPlayer")
+
+        for (i in onBoard) {
+            player.addAll(i.cards())
+        }
+        onBoard.clear()
+
+        gameDB.child(playerStr).ref.setValue(player)
+        gameDB.child("onBoard").ref.setValue(onBoard)
+        gameDB.child("playerTurn").ref.setValue(opponentId.value)
+
+        _isTake.value = false
+
+        takeCardsFromPack(gameId)
+
+    }
+
+    fun iTake(gameId: String) {
+        database.child(gameId).child("game/whoTake").ref.setValue(playerId.value)
+        database.child(gameId).child("game/playerTurn").ref.setValue(opponentId.value)
+    }
+
+    fun iPass(gameId: String) {
+        val gameDB = database.child(gameId).child("game")
+        gameDB.child("whoTake").ref.setValue("done")
+        _isPass.value = false
+    }
 
 }

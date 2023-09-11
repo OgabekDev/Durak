@@ -7,19 +7,20 @@
         <deviceKey>
           <Key>
             <type value="VIRTUAL_DEVICE_PATH" />
-            <value value="$USER_HOME$/.android/avd/Pixel_4_API_32_with_Play_Store.avd" />
+            <value value="C:\Users\User\.android\avd\Pixel_4_API_34.avd" />
           </Key>
         </deviceKey>
       </Target>
     </runningDeviceTargetSelectedWithDropDown>
-    <timeTargetWasSelectedWithDropDown value="2023-09-10T20:21:21.873452Z" />
+    <timeTargetWasSelectedWithDropDown value="2023-09-11T15:15:56.885731400Z" />
+    <multipleDevicesSelectedInDropDown value="true" />
     <runningDeviceTargetsSelectedWithDialog>
       <Target>
         <type value="RUNNING_DEVICE_TARGET" />
         <deviceKey>
           <Key>
             <type value="VIRTUAL_DEVICE_PATH" />
-            <value value="$USER_HOME$/.android/avd/Pixel_4_API_32_with_Play_Store.avd" />
+            <value value="C:\Users\User\.android\avd\Pixel_4_API_34.avd" />
           </Key>
         </deviceKey>
       </Target>
@@ -27,8 +28,8 @@
         <type value="RUNNING_DEVICE_TARGET" />
         <deviceKey>
           <Key>
-            <type value="VIRTUAL_DEVICE_PATH" />
-            <value value="$USER_HOME$/.android/avd/Pixel_3_API_32.avd" />
+            <type value="SERIAL_NUMBER" />
+            <value value="50Z5C368C6" />
           </Key>
         </deviceKey>
       </Target>

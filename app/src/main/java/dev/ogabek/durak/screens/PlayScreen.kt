@@ -92,7 +92,7 @@ fun PlayScreen(
         }
 
         LaunchedEffect(isNew) {
-            viewModel.setDatabase(gameId)
+            viewModel.setDatabase(gameId, isNew)
             viewModel.loadGame(gameId, isNew)
         }
 
@@ -192,22 +192,19 @@ fun GameView(
                 if (viewModel.isTake.value) {
                     MyButton(text = "I take", height = 35, width = 75, color = Color(144, 64, 58)) {
                         // TODO: I take onClick
+                        viewModel.iTake(gameId)
                     }
                 }
                 if (viewModel.isPass.value) {
-                    MyButton(
-                        text = "I pass",
-                        height = 35,
-                        width = 75,
-                        color = Color(58, 144, 144)
-                    ) {
+                    MyButton(text = "I pass", height = 35, width = 75, color = Color(58, 144, 144)) {
                         // TODO: I pass onClick
+                        viewModel.iPass(gameId)
                     }
                 }
                 if (viewModel.isBat.value) {
                     MyButton(text = "Bat", height = 35, width = 75, color = Color(66, 52, 155)) {
                         // TODO: Bat onClick
-                        viewModel.batCards(gameId, isNew)
+                        viewModel.iBat(gameId)
                     }
                 }
                 if (isNew && !viewModel.isWaiting.value && !viewModel.isPlaying.value) {
