@@ -53,11 +53,12 @@ import dev.ogabek.durak.views.CardPack
 import dev.ogabek.durak.views.LoadingView
 import dev.ogabek.durak.views.MyButton
 import dev.ogabek.durak.views.PlayingCard
+import dev.ogabek.durak.views.ResultView
 
 @Destination
 @Composable
 fun PlayScreen(
-    navController: DestinationsNavigator,
+    navigator: DestinationsNavigator,
     gameId: String,
     isNew: Boolean,
     viewModel: PlayViewModel = hiltViewModel()
@@ -72,7 +73,7 @@ fun PlayScreen(
             )
     ) {
 
-        if (viewModel.isWaiting.value) {
+        if (viewModel.isWaiting.value && !viewModel.isFinish.value) {
             LoadingView(
                 title = "Please wait your opponent",
                 subTitle = "Invite via code: $gameId"
@@ -94,6 +95,18 @@ fun PlayScreen(
         LaunchedEffect(isNew) {
             viewModel.setDatabase(gameId, isNew)
             viewModel.loadGame(gameId, isNew)
+        }
+
+        if (viewModel.isFinish.value) {
+            if (viewModel.draw.value) {
+                ResultView(isWin = null) {
+                    navigator.navigateUp()
+                }
+            } else if (viewModel.whoWon.value != null) {
+                ResultView(isWin = viewModel.whoWon.value) {
+                    navigator.navigateUp()
+                }
+            }
         }
 
     }

@@ -24,7 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoadingView(title: String, subTitle: String) {
+fun LoadingView(
+    title: String,
+    subTitle: String
+) {
     Box(
         modifier = Modifier
             .fillMaxSize(),

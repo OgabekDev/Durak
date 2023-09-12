@@ -84,8 +84,11 @@ class PlayViewModel @Inject constructor(
     private val _isFinish = mutableStateOf(false)
     val isFinish = _isFinish
 
-    private val _whoWon = mutableStateOf("")
+    private val _whoWon = mutableStateOf<Boolean?>(null)
     val whoWon = _whoWon
+
+    private val _draw = mutableStateOf(false)
+    val draw = _draw
 
     private val _firstPlayer = mutableStateListOf<Card>()
     val firstPlayer = _firstPlayer
@@ -125,7 +128,11 @@ class PlayViewModel @Inject constructor(
                     val won = snapshot.value as String
                     if (won.isNotEmpty()) {
                         _isFinish.value = true
-                        _whoWon.value = won
+                        if (won == "draw") {
+                            _draw.value = true
+                        } else {
+                            _whoWon.value = won == playerId.value
+                        }
                     }
                 }
             }
@@ -338,7 +345,6 @@ class PlayViewModel @Inject constructor(
                         snapshot.child("firstPlayer").ref.setValue(firstPlayer)
                         snapshot.child("secondPlayer").ref.setValue(secondPlayer)
                         snapshot.child("playerTurn").ref.setValue(playerId.value)
-                        snapshot.child("firstMove").ref.setValue(playerId.value)
                         _isPlaying.value = true
                     }
                 }
@@ -379,6 +385,7 @@ class PlayViewModel @Inject constructor(
 
                 gameDB.child(playerStr).ref.setValue(player)
                 gameDB.child("onBoard").ref.setValue(onBoard)
+                isWin(gameId, isNew)
             } else if (new && !isPass.value) {
                 val boardCard = OnBoardCard(
                     firstCard = card,
@@ -392,11 +399,9 @@ class PlayViewModel @Inject constructor(
                 gameDB.child("playerTurn").ref.setValue(opponentId.value)
             } else if (!isPass.value) {
                 if (onBoard.last().secondCard == null) {
+                    val isOnBoardCardMain = onBoard.last().firstCard!!.type == mainType.value
                     val isPossible =
-                        ((onBoard.last().firstCard!!.type == card.type) && (onBoard.last().firstCard!!.code < card.code)) || ((card.type == mainType.value) && (onBoard.last().firstCard!!.code < card.code + isCardMain.check(
-                            10,
-                            0
-                        )))
+                        ((onBoard.last().firstCard!!.type == card.type) && (onBoard.last().firstCard!!.code < card.code)) || ((card.type == mainType.value) && (onBoard.last().firstCard!!.code + isOnBoardCardMain.check(10, 0) < card.code + isCardMain.check(10, 0)))
                     if (isPossible) {
                         onBoard.last().secondCard = card
                         player.remove(card)
@@ -404,6 +409,7 @@ class PlayViewModel @Inject constructor(
                         gameDB.child(playerStr).ref.setValue(player)
                         gameDB.child("onBoard").ref.setValue(onBoard)
                         gameDB.child("playerTurn").ref.setValue(opponentId.value)
+                        isWin(gameId, isNew)
                     }
                 } else {
                     if (isCardHave) {
@@ -423,6 +429,16 @@ class PlayViewModel @Inject constructor(
         }
     }
 
+    private fun isWin(gameId: String, isNew: Boolean) = viewModelScope.launch {
+        val gameDB = database.child(gameId)
+        if (firstPlayer.size == 0 && secondPlayer.size == 0) {
+            gameDB.child("won").ref.setValue("draw")
+        } else if (firstPlayer.size == 0) {
+            gameDB.child("won").ref.setValue(isNew.check(playerId.value, opponentId.value))
+        } else if (secondPlayer.size == 0) {
+            gameDB.child("won").ref.setValue(isNew.check(playerId.value, opponentId.value))
+        }
+    }
 
     fun closeError() = viewModelScope.launch {
         _error.value = false
@@ -442,7 +458,7 @@ class PlayViewModel @Inject constructor(
 
     }
 
-    private fun takeCardsFromPack(gameId: String) {
+    private fun takeCardsFromPack(gameId: String) = viewModelScope.launch {
 
         val gameDB = database.child(gameId).child("game")
 
@@ -498,12 +514,12 @@ class PlayViewModel @Inject constructor(
 
     }
 
-    fun iTake(gameId: String) {
+    fun iTake(gameId: String) = viewModelScope.launch {
         database.child(gameId).child("game/whoTake").ref.setValue(playerId.value)
         database.child(gameId).child("game/playerTurn").ref.setValue(opponentId.value)
     }
 
-    fun iPass(gameId: String) {
+    fun iPass(gameId: String) = viewModelScope.launch {
         val gameDB = database.child(gameId).child("game")
         gameDB.child("whoTake").ref.setValue("done")
         _isPass.value = false
